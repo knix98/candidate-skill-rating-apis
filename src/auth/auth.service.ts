@@ -12,11 +12,9 @@ export class AuthService {
   ) {}
 
   async login({username, password}: { username: string, password: string }): Promise<{ access_token: string }> {
-    console.log("auth.service.ts => login => username :", username, "password :", password);
     const user = await this.userService.findByName(username);
-    console.log("auth.service.ts => login => user :", user);
     if (user && (await bcrypt.compare(password, user.password))) {
-      const payload = { sub: user.id, username: user.name };
+      const payload = { sub: user.id, username: user.name, role: user.role };
       return {
         access_token: await this.jwtService.signAsync(payload),
       };
@@ -26,7 +24,6 @@ export class AuthService {
 
   async register({username, password, role}: { username: string, password: string, role: UserRole }) {
     const user = await this.userService.findByName(username);
-    console.log("auth.service.ts => register => user :", user);
     if(user) {
       throw new ForbiddenException('username already registered. Please try with another username');
     }

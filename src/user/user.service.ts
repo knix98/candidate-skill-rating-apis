@@ -8,7 +8,7 @@ export class UserService {
   constructor(
     // making a repository out of User entity. userRepository would give us the api/functions to interact with the User/users entity/table
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async create(user: Partial<User>): Promise<User> {

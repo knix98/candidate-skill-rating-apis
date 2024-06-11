@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { QuestionResponse } from './question-response.entity';
 
 export enum UserRole {
   CANDIDATE = 'candidate',
@@ -21,4 +22,16 @@ export class User {
 
   @Column()
   password: string;
+
+  @OneToMany(() => QuestionResponse, (questionResponse) => questionResponse.candidate, {
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
+  candidateResponses: QuestionResponse[];
+
+  @OneToMany(() => QuestionResponse, (questionResponse) => questionResponse.reviewer, {
+    cascade: true,
+    onDelete: 'SET NULL',
+  })
+  reviewerResponses: QuestionResponse[];
 }

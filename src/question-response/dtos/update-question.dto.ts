@@ -1,6 +1,5 @@
 import { IsEnum, IsNotEmpty, IsOptional } from "class-validator";
 import { DifficultyLevel } from "src/typeorm/entities/question-response.entity";
-import { PartialType } from "@nestjs/mapped-types";
 
 export class CreateQuestionDto {
     @IsNotEmpty()
@@ -18,5 +17,3 @@ export class CreateQuestionDto {
     @IsOptional()
     readonly rating?: number;
 }
-
-export class UpdateQuestionDto extends PartialType(CreateQuestionDto) {}

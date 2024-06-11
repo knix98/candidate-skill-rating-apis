@@ -7,17 +7,12 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-import { Reflector } from '@nestjs/core';
-import { UserRole } from 'src/typeorm/entities/user.entity';
-
-export const ROLES_KEY = 'roles';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -25,12 +20,11 @@ export class AuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException('You are not logged in');
+      throw new UnauthorizedException('Bearer token not found. Please login first and then try request with Bearer token');
     }
 
-    let payload: any;
     try {
-      payload = await this.jwtService.verifyAsync(token, {
+      const payload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get('JWT_SECRET'),
       });
       // 💡 We're assigning the payload to the request object here
@@ -40,15 +34,7 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
 
-    const allowedRoles = this.reflector.getAllAndOverride<UserRole[]>(
-      ROLES_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-    if (!allowedRoles) {
-      return true;
-    }
-
-    return allowedRoles.includes(payload.role);
+    return true;
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {

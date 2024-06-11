@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { QuestionResponse } from '../typeorm/entities/question-response.entity';
+import { UserRole } from 'src/typeorm/entities/user.entity';
 
 @Injectable()
 export class QuestionResponseService {
@@ -10,13 +11,22 @@ export class QuestionResponseService {
     private questionResponseRepository: Repository<QuestionResponse>,
   ) {}
 
-  create(questionResponse: Partial<QuestionResponse>): Promise<QuestionResponse> {
+  create(questionResponse: Partial<QuestionResponse>, userId: number, userRole: UserRole): Promise<QuestionResponse> {
+    if (userRole === UserRole.CANDIDATE) {
+      questionResponse.candidate = { id: userId } as any; // Only setting id, not the whole User entity
+    } else if (userRole === UserRole.REVIEWER) {
+      questionResponse.reviewer = { id: userId } as any; // Only setting id, not the whole User entity
+    }
     const newQuestionResponse = this.questionResponseRepository.create(questionResponse);
     return this.questionResponseRepository.save(newQuestionResponse);
   }
 
-  findAll(): Promise<QuestionResponse[]> {
-    return this.questionResponseRepository.find({ relations: ['candidate', 'reviewer'] });
+  findAllCandidateQuestions(id: number): Promise<QuestionResponse[]> {
+    return this.questionResponseRepository.find({ where: { candidate: { id } }, relations: ['candidate', 'reviewer'] });
+  }
+
+  findAllReviewerQuestions(id: number): Promise<QuestionResponse[]> {
+    return this.questionResponseRepository.find({ where: { reviewer: { id } }, relations: ['candidate', 'reviewer'] });
   }
 
   findOne(id: number): Promise<QuestionResponse> {
@@ -26,8 +36,8 @@ export class QuestionResponseService {
     });
   }
 
-  update(id: number, updateQuestionResponse: Partial<QuestionResponse>): Promise<void> {
-    return this.questionResponseRepository.update(id, updateQuestionResponse).then(() => undefined);
+  update(id: number, updateQuestionResponse: Partial<QuestionResponse>): Promise<UpdateResult> {
+    return this.questionResponseRepository.update(id, updateQuestionResponse);
   }
 
   remove(id: number): Promise<void> {

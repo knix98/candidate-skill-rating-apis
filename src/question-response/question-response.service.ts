@@ -44,6 +44,10 @@ export class QuestionResponseService {
     return this.questionResponseRepository.delete(id).then(() => undefined);
   }
 
+  rateResponse(id: number, rating: number): Promise<UpdateResult> {
+    return this.questionResponseRepository.update(id, { rating });
+  }
+
   async getAggregatedSkills(candidateId: number): Promise<{ skillId: number; rating: number }[]> {
     const responses = await this.questionResponseRepository.find({ where: { candidate: { id: candidateId } } });
 

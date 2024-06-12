@@ -19,20 +19,45 @@ export class QuestionResponseController {
   }
 
   @Get('candidate-questions')
-  findAllCandidateQuestions(@Query('candidate-id') id: number): Promise<QuestionResponse[]> {
-    return this.questionResponseService.findAllCandidateQuestions(id);
+  async findAllCandidateQuestions(@Query('candidate-id') id: number): Promise<QuestionResponse[]> {
+    let resp: QuestionResponse[] = await this.questionResponseService.findAllCandidateQuestions(id);
+    if(!resp || !resp.length) {
+      throw new HttpException('No questions found', HttpStatus.NOT_FOUND);
+    }
+
+    resp = resp.map((question) => {
+      const { candidate, ...rest } = question;
+      return rest as any;
+    })
+    return resp;
   }
 
   @Get('reviewer-questions')
   @SetMetadata(ROLES_KEY, ['reviewer'])
   @UseGuards(RolesGuard)
-  findAllReviewerQuestions(@Query('reviewer-id') id: number): Promise<QuestionResponse[]> {
-    return this.questionResponseService.findAllReviewerQuestions(id);
+  async findAllReviewerQuestions(@Query('reviewer-id') id: number): Promise<QuestionResponse[]> {
+    let resp: QuestionResponse[] = await this.questionResponseService.findAllReviewerQuestions(id);
+    if(!resp || !resp.length) {
+      throw new HttpException('No questions found', HttpStatus.NOT_FOUND);
+    }
+
+    resp = resp.map((question) => {
+      const { candidate, ...rest } = question;
+      return rest as any;
+    })
+    return resp;
   }
 
   @Get()
-  findOne(@Query('question-id') id: number): Promise<QuestionResponse> {
-    return this.questionResponseService.findOne(id);
+  async findOne(@Query('question-id') id: number): Promise<any> {
+    const resp: QuestionResponse = await this.questionResponseService.findOne(id);
+    if(!resp) {
+      throw new HttpException('Question not found', HttpStatus.NOT_FOUND);
+    }
+
+    const { role, password, ...candidate } = resp.candidate;
+    resp.candidate = candidate as any;
+    return resp;
   }
 
   @Put()
@@ -45,6 +70,14 @@ export class QuestionResponseController {
   async remove(@Query('question-id') id: number): Promise<void> {
     await this.questionResponseService.remove(id);
     throw new HttpException('Question deleted successfully', HttpStatus.OK);
+  }
+
+  @Put(':id/rate')
+  @SetMetadata(ROLES_KEY, ['reviewer'])
+  @UseGuards(RolesGuard)
+  async rateResponse(@Param('id') id: number, @Body('rating') rating: number): Promise<void> {
+    await this.questionResponseService.rateResponse(id, rating);
+    throw new HttpException('Question rated successfully', HttpStatus.OK);
   }
 
   @Get('aggregated-skills/:candidateId')

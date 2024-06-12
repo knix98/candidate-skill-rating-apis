@@ -6,6 +6,7 @@ export class CreateQuestionDto {
     @IsNotEmpty()
     readonly skillId: number;
 
+    @IsNotEmpty()
     @IsEnum(DifficultyLevel)
     readonly difficultyLevel: DifficultyLevel;
     
@@ -14,9 +15,6 @@ export class CreateQuestionDto {
     
     @IsOptional()
     readonly response?: string;
-    
-    @IsOptional()
-    readonly rating?: number;
 }
 
 export class UpdateQuestionDto extends PartialType(CreateQuestionDto) {}
